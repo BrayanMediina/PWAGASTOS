@@ -1,0 +1,129 @@
+{
+  "id": "control-de-gastos-pwa",
+  "name": "Control de Gastos PWA",
+  "short_name": "Control Gastos",
+  "description": "Registra gastos diarios, controla tu presupuesto mensual y consulta resúmenes incluso sin conexión.",
+  "dir": "ltr",
+  "lang": "es-CO",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "background_color_dark": "#0f172a",
+  "background_color_light": "#f8fafc",
+  "theme_color_dark": "#818cf8",
+  "theme_color_light": "#a5b4fc",
+  "icons": [
+    {
+      "src": "./src/assets/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "./src/assets/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "./src/assets/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "./src/assets/icons/screenshot-1.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "label": "Resumen de gasto mensual"
+    },
+    {
+      "src": "./src/assets/icons/screenshot-2.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "label": "Registro de gastos y presupuesto"
+    }
+  ],
+  "categories": ["finance", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Agregar gasto",
+      "short_name": "Nuevo gasto",
+      "description": "Registra un nuevo gasto rápidamente.",
+      "url": "./index.html#expenseForm",
+      "icons": [
+        {
+          "src": "./src/assets/icons/icon-192.svg",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Ver resumen",
+      "short_name": "Resumen",
+      "description": "Consulta el resumen mensual y saldo.",
+      "url": "./index.html#reportMonth",
+      "icons": [
+        {
+          "src": "./src/assets/icons/icon-512.svg",
+          "sizes": "512x512",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "related_applications": [
+    {
+      "platform": "web",
+      "url": "https://example.com/related-app-info"
+    },
+    {
+      "platform": "play",
+      "id": "com.example.controlgastos",
+      "url": "https://play.google.com/store/apps/details?id=com.example.controlgastos"
+    }
+  ],
+  "prefer_related_applications": false,
+  "protocol_handlers": [
+    {
+      "protocol": "web+gastos",
+      "url": "./index.html?source=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "./index.html",
+      "accept": {
+        "application/json": [".gastos.json"],
+        "text/csv": [".gastos.csv"]
+      }
+    }
+  ],
+  "serviceworker": {
+    "src": "./sw.js",
+    "scope": "./",
+    "type": "classic"
+  },
+  "developer": {
+    "name": "Brayan Julián Barrantes Medina",
+    "url": "https://example.com",
+    "email": "contacto@example.com"
+  },
+  "version": "1.0.0",
+  "splash_pages": ["./src/pages/offline.html"],
+  "custom_notes": "Este manifiesto incluye propiedades estándar y extendidas para mejorar la experiencia PWA en navegadores modernos."
+}
