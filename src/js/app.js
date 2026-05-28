@@ -449,3 +449,34 @@ function registerServiceWorker() {
     showMessage("No fue posible registrar el Service Worker.");
   });
 }
+// Función para sanear entradas de texto y prevenir XSS
+function sanitizeInput(input) {
+  const div = document.createElement('div');
+  div.textContent = input;
+  return div.innerHTML;
+}
+
+// Ejemplo de cómo aplicarlo al capturar el formulario de gastos:
+document.getElementById('expenseForm').addEventListener('submit', function(e) {
+  e.preventDefault(); // Prevenir envío para procesar con JS
+  
+  // Validar si el formulario cumple las reglas HTML5 nativas
+  if (!this.checkValidity()) {
+    alert("Por favor, revisa que los datos ingresados sean válidos y mayores a 0.");
+    return;
+  }
+
+  // Obtener y sanear los datos
+  const rawNote = document.getElementById('expenseNote').value;
+  const sanitizedNote = sanitizeInput(rawNote); 
+  const amount = parseFloat(document.getElementById('expenseAmount').value);
+
+  // Validación extra por JS
+  if (amount <= 0) {
+    alert("El monto debe ser mayor a cero.");
+    return;
+  }
+
+  console.log("Descripción segura a guardar:", sanitizedNote);
+  // Aquí continuaría tu lógica para guardar en IndexedDB o LocalStorage...
+});
