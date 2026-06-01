@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'sha256-uv/7mLWPqzMk6vblx0ZAbAV1eeUt5rt8nwhS06n+Cek=' 'strict-dynamic'; style-src 'self'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content"
+    />
     <meta name="theme-color" content="#6366f1" />
     <meta name="description" content="PWA para registrar gastos diarios y presupuestos mensuales." />
     <link rel="manifest" href="./manifest.json" />
@@ -131,6 +135,6 @@
       <p>Control de Gastos PWA &copy; 2026</p>
     </footer>
 
-    <script src="./src/js/app.js" type="module"></script>
+    <script>(function(){const host=window.location.hostname;const isLocalHost=host==="localhost"||host==="127.0.0.1"||host==="[::1]";if(window.location.protocol==="http:"&&!isLocalHost){window.location.replace(window.location.href.replace(/^http:/,"https:"));return;}const appScript=document.createElement("script");appScript.type="module";appScript.src="./src/js/app.js";appScript.integrity="sha384-EroC+8cwhozu1Ch0OVbpticLY9O6Prvfta2MoCuqnvhHgyi00GioFXELcjjk7BbW";appScript.crossOrigin="anonymous";document.body.appendChild(appScript);})();</script>
   </body>
 </html>

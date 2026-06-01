@@ -5,6 +5,20 @@ const STORAGE_KEYS = {
   budgets: "budgets.v1"
 };
 
+const ALLOWED_CATEGORIES = new Set([
+  "Comida",
+  "Transporte",
+  "Ocio",
+  "Salud",
+  "Servicios",
+  "Otros"
+]);
+
+const LIMITS = {
+  maxAmount: 1000000000,
+  maxNoteLength: 80
+};
+
 // Referencias a elementos del DOM para no repetir búsquedas y mejorar claridad.
 // Formularios y campos de entrada principales.
 const expenseForm = document.getElementById("expenseForm");
@@ -47,6 +61,7 @@ init();
 // registra eventos, renderiza UI y configura PWA.
 function init() {
   const currentMonth = getMonthKey(new Date());
+  const evidenceScenario = getEvidenceScenario();
 
   // Fecha actual por defecto para el registro de gasto.
   expenseDate.valueAsDate = new Date();
@@ -56,12 +71,18 @@ function init() {
   reportMonth.value = currentMonth;
 
   // Carga persistencia local (si falla, usa arreglos vacíos).
-  expenses = safeRead(STORAGE_KEYS.expenses, []);
-  budgets = safeRead(STORAGE_KEYS.budgets, []);
+  if (evidenceScenario) {
+    localStorage.removeItem(STORAGE_KEYS.expenses);
+    localStorage.removeItem(STORAGE_KEYS.budgets);
+  }
+
+  expenses = sanitizeExpensesCollection(safeRead(STORAGE_KEYS.expenses, []));
+  budgets = sanitizeBudgetsCollection(safeRead(STORAGE_KEYS.budgets, []));
 
   // Activa comportamiento de UI y sincroniza vista inicial.
   bindEvents();
   render();
+  runEvidenceScenario(evidenceScenario);
   updateNetworkStatus();
   registerServiceWorker();
 }
@@ -85,10 +106,10 @@ function onAddExpense(event) {
   const payload = {
     // ID único para distinguir registros (útil para futuras ediciones/eliminaciones).
     id: crypto.randomUUID(),
-    date: expenseDate.value,
-    category: expenseCategory.value,
-    amount: Number(expenseAmount.value),
-    note: expenseNote.value.trim()
+    date: normalizeDateValue(expenseDate.value),
+    category: normalizeCategory(expenseCategory.value),
+    amount: normalizeAmount(expenseAmount.value, { allowZero: false }),
+    note: sanitizeNote(expenseNote.value)
   };
 
   // Validación de campos obligatorios y monto positivo.
@@ -98,7 +119,7 @@ function onAddExpense(event) {
     return;
   }
 
-  if (!payload.category) {
+  if (!payload.category || !ALLOWED_CATEGORIES.has(payload.category)) {
     notifyInvalidValue("Debes seleccionar una categoría válida.");
     expenseCategory.focus();
     return;
@@ -116,7 +137,7 @@ function onAddExpense(event) {
     return;
   }
 
-  if (payload.amount > 1000000000) {
+  if (payload.amount > LIMITS.maxAmount) {
     notifyInvalidValue("El monto es demasiado alto y parece inadecuado.");
     expenseAmount.focus();
     return;
@@ -144,8 +165,8 @@ function onSaveBudget(event) {
 
   // Objeto presupuesto normalizado desde inputs.
   const payload = {
-    month: budgetMonth.value,
-    budget: Number(totalBudget.value)
+    month: normalizeMonthValue(budgetMonth.value),
+    budget: normalizeAmount(totalBudget.value, { allowZero: true })
   };
 
   // Validación básica: mes requerido y valores no negativos.
@@ -161,7 +182,7 @@ function onSaveBudget(event) {
     return;
   }
 
-  if (payload.budget > 1000000000) {
+  if (payload.budget > LIMITS.maxAmount) {
     notifyInvalidValue("El valor del presupuesto parece inadecuado por ser demasiado alto.");
     return;
   }
@@ -209,25 +230,43 @@ function render() {
 
 // Renderiza el historial tabular de gastos del mes.
 function renderTable(monthExpenses) {
+  tableBody.textContent = "";
+
   // Estado vacío cuando no existen registros.
   if (monthExpenses.length === 0) {
-    tableBody.innerHTML = "<tr><td colspan='4'>No hay gastos para este mes.</td></tr>";
+    const emptyRow = document.createElement("tr");
+    const emptyCell = document.createElement("td");
+    emptyCell.colSpan = 4;
+    emptyCell.textContent = "No hay gastos para este mes.";
+    emptyRow.appendChild(emptyCell);
+    tableBody.appendChild(emptyRow);
     return;
   }
 
-  // Construye filas HTML. La nota se sanitiza para prevenir inyección.
-  tableBody.innerHTML = monthExpenses
-    .map(
-      (item) => `
-      <tr>
-        <td>${item.date}</td>
-        <td>${item.category}</td>
-        <td>${escapeHtml(item.note || "-")}</td>
-        <td>${currency.format(item.amount)}</td>
-      </tr>
-    `
-    )
-    .join("");
+  // Construye filas usando nodos para evitar inyección HTML.
+  const fragment = document.createDocumentFragment();
+
+  monthExpenses.forEach((item) => {
+    const row = document.createElement("tr");
+    const dateCell = document.createElement("td");
+    const categoryCell = document.createElement("td");
+    const noteCell = document.createElement("td");
+    const amountCell = document.createElement("td");
+
+    dateCell.textContent = item.date;
+    categoryCell.textContent = item.category;
+    noteCell.textContent = item.note || "-";
+    amountCell.textContent = currency.format(item.amount);
+
+    row.appendChild(dateCell);
+    row.appendChild(categoryCell);
+    row.appendChild(noteCell);
+    row.appendChild(amountCell);
+
+    fragment.appendChild(row);
+  });
+
+  tableBody.appendChild(fragment);
 }
 
 // Calcula y muestra indicadores financieros del mes.
@@ -426,15 +465,193 @@ function updateNetworkStatus() {
   }
 }
 
-// Escapa caracteres especiales para evitar que texto del usuario
-// sea interpretado como HTML al renderizar la tabla.
-function escapeHtml(value) {
+function normalizeAmount(value, { allowZero }) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) {
+    return Number.NaN;
+  }
+
+  if (allowZero) {
+    if (amount < 0) {
+      return Number.NaN;
+    }
+  } else if (amount <= 0) {
+    return Number.NaN;
+  }
+
+  return Math.round(amount * 100) / 100;
+}
+
+function normalizeDateValue(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return "";
+  }
+
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const [year, month, day] = value.split("-").map((part) => Number(part));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() + 1 !== month || date.getUTCDate() !== day) {
+    return "";
+  }
+
+  return value;
+}
+
+function normalizeMonthValue(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}$/.test(value)) {
+    return "";
+  }
+
+  const [year, month] = value.split("-").map((part) => Number(part));
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    return "";
+  }
+
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}`;
+}
+
+function normalizeCategory(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim();
+}
+
+function sanitizeNote(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
   return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+    .normalize("NFKC")
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, LIMITS.maxNoteLength);
+}
+
+function sanitizeExpenseRecord(record) {
+  if (!record || typeof record !== "object") {
+    return null;
+  }
+
+  const date = normalizeDateValue(record.date);
+  const category = normalizeCategory(record.category);
+  const amount = normalizeAmount(record.amount, { allowZero: false });
+  const note = sanitizeNote(record.note || "");
+
+  if (!date || !ALLOWED_CATEGORIES.has(category) || !Number.isFinite(amount) || amount > LIMITS.maxAmount) {
+    return null;
+  }
+
+  return {
+    id: typeof record.id === "string" && record.id.trim() ? record.id.trim() : crypto.randomUUID(),
+    date,
+    category,
+    amount,
+    note
+  };
+}
+
+function sanitizeBudgetRecord(record) {
+  if (!record || typeof record !== "object") {
+    return null;
+  }
+
+  const month = normalizeMonthValue(record.month);
+  const budget = normalizeAmount(record.budget, { allowZero: true });
+
+  if (!month || !Number.isFinite(budget) || budget > LIMITS.maxAmount) {
+    return null;
+  }
+
+  return {
+    month,
+    budget
+  };
+}
+
+function sanitizeExpensesCollection(data) {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.map(sanitizeExpenseRecord).filter(Boolean);
+}
+
+function sanitizeBudgetsCollection(data) {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  const mapByMonth = new Map();
+  data.forEach((item) => {
+    const sanitized = sanitizeBudgetRecord(item);
+    if (sanitized) {
+      mapByMonth.set(sanitized.month, sanitized);
+    }
+  });
+
+  return Array.from(mapByMonth.values());
+}
+
+function getEvidenceScenario() {
+  const params = new URLSearchParams(window.location.search);
+  const scenario = params.get("evidence");
+  if (!scenario) {
+    return "";
+  }
+
+  return scenario.trim().toLowerCase();
+}
+
+function runEvidenceScenario(scenario) {
+  if (!scenario) {
+    return;
+  }
+
+  if (scenario === "invalid-form") {
+    expenseDate.valueAsDate = new Date();
+    expenseCategory.value = "Comida";
+    expenseAmount.value = "-1200";
+    expenseNote.value = "intento invalido";
+    expenseForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+    return;
+  }
+
+  if (scenario === "sanitized-note") {
+    const today = new Date();
+    const currentMonth = getMonthKey(today);
+    budgetMonth.value = currentMonth;
+    totalBudget.value = "300000";
+    budgetForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+
+    expenseDate.valueAsDate = today;
+    expenseCategory.value = "Comida";
+    expenseAmount.value = "35000";
+    expenseNote.value = "<img src=x onerror=alert('xss')> Almuerzo";
+    expenseForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+
+    reportMonth.value = currentMonth;
+    render();
+    showMessage("Escenario de evidencia: la nota fue saneada y renderizada como texto seguro.", false);
+    return;
+  }
+
+  if (scenario === "csp") {
+    const policy = document.querySelector("meta[http-equiv='Content-Security-Policy']")?.content || "";
+    const strictDynamicEnabled = policy.includes("strict-dynamic");
+    const blockedObjects = policy.includes("object-src 'none'");
+    if (strictDynamicEnabled && blockedObjects) {
+      showMessage("CSP activa: strict-dynamic, bloqueo de objetos y control estricto habilitados.", false);
+    } else {
+      showMessage("CSP incompleta: revisa la directiva de seguridad de contenido.", true);
+    }
+  }
 }
 
 // Registra el Service Worker para habilitar capacidades PWA.
@@ -449,34 +666,3 @@ function registerServiceWorker() {
     showMessage("No fue posible registrar el Service Worker.");
   });
 }
-// Función para sanear entradas de texto y prevenir XSS
-function sanitizeInput(input) {
-  const div = document.createElement('div');
-  div.textContent = input;
-  return div.innerHTML;
-}
-
-// Ejemplo de cómo aplicarlo al capturar el formulario de gastos:
-document.getElementById('expenseForm').addEventListener('submit', function(e) {
-  e.preventDefault(); // Prevenir envío para procesar con JS
-  
-  // Validar si el formulario cumple las reglas HTML5 nativas
-  if (!this.checkValidity()) {
-    alert("Por favor, revisa que los datos ingresados sean válidos y mayores a 0.");
-    return;
-  }
-
-  // Obtener y sanear los datos
-  const rawNote = document.getElementById('expenseNote').value;
-  const sanitizedNote = sanitizeInput(rawNote); 
-  const amount = parseFloat(document.getElementById('expenseAmount').value);
-
-  // Validación extra por JS
-  if (amount <= 0) {
-    alert("El monto debe ser mayor a cero.");
-    return;
-  }
-
-  console.log("Descripción segura a guardar:", sanitizedNote);
-  // Aquí continuaría tu lógica para guardar en IndexedDB o LocalStorage...
-});
