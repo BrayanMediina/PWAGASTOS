@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'sha256-uv/7mLWPqzMk6vblx0ZAbAV1eeUt5rt8nwhS06n+Cek=' 'strict-dynamic'; style-src 'self'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content"
+      content="default-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'sha256-Aqh4ymzUcFqoQr8CO94PMhqTnruYqCw0Psrg4x8F808=' 'strict-dynamic'; style-src 'self'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content"
     />
     <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#818cf8" media="(prefers-color-scheme: dark)" />
@@ -18,6 +18,9 @@
     <link rel="icon" href="./src/assets/icons/icon-192.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./src/assets/icons/icon-192.svg" />
     <link rel="stylesheet" href="./src/css/styles.css" />
+    <!-- AUDITORÍA 1 – PageSpeed Insights: precargar hoja de estilos y fuente crítica -->
+    <link rel="preload" href="./src/css/styles.css" as="style" />
+    <link rel="preload" href="./src/js/app.js" as="script" crossorigin="anonymous" />
     <title>Control de Gastos PWA</title>
   </head>
   <body>
@@ -139,10 +142,56 @@
       </section>
     </main>
 
+    <!-- AUDITORÍA 2 – Lighthouse: Banner de instalación PWA personalizado -->
+    <aside id="installBanner" class="install-banner" hidden aria-live="polite" role="complementary"
+           aria-label="Instalar aplicación">
+      <div class="install-banner__content">
+        <span class="install-banner__icon" aria-hidden="true">📲</span>
+        <div class="install-banner__text">
+          <strong>Instala la aplicación</strong>
+          <span>Úsala sin conexión, directamente desde tu pantalla de inicio.</span>
+        </div>
+      </div>
+      <div class="install-banner__actions">
+        <button id="btnInstall" class="install-banner__btn install-banner__btn--primary">
+          Instalar
+        </button>
+        <button id="btnDismissInstall" class="install-banner__btn install-banner__btn--ghost"
+                aria-label="Cerrar banner de instalación">
+          ✕
+        </button>
+      </div>
+    </aside>
+
+    <!-- AUDITORÍA 4 – Web Vitals en tiempo real -->
+    <div id="vitalsPanel" class="vitals-panel" hidden aria-label="Panel de Web Vitals">
+      <button id="vitalsToggle" class="vitals-toggle" aria-expanded="true"
+              aria-controls="vitalsContent" title="Web Vitals en tiempo real">
+        📊 Web Vitals
+      </button>
+      <div id="vitalsContent" class="vitals-content">
+        <ul class="vitals-list" role="list">
+          <li class="vitals-row">
+            <abbr title="Largest Contentful Paint">LCP</abbr>
+            <span id="vp-lcp" class="vitals-value" data-rating="">—</span>
+          </li>
+          <li class="vitals-row">
+            <abbr title="Cumulative Layout Shift">CLS</abbr>
+            <span id="vp-cls" class="vitals-value" data-rating="">—</span>
+          </li>
+          <li class="vitals-row">
+            <abbr title="Interaction to Next Paint">INP</abbr>
+            <span id="vp-inp" class="vitals-value" data-rating="">—</span>
+          </li>
+        </ul>
+        <p class="vitals-hint">Interactúa con la app para ver INP</p>
+      </div>
+    </div>
+
     <footer class="app-footer">
       <p>Control de Gastos PWA &copy; 2026</p>
     </footer>
 
-    <script>(function(){const host=window.location.hostname;const isLocalHost=host==="localhost"||host==="127.0.0.1"||host==="[::1]";if(window.location.protocol==="http:"&&!isLocalHost){window.location.replace(window.location.href.replace(/^http:/,"https:"));return;}const appScript=document.createElement("script");appScript.type="module";appScript.src="./src/js/app.js";appScript.integrity="sha384-EroC+8cwhozu1Ch0OVbpticLY9O6Prvfta2MoCuqnvhHgyi00GioFXELcjjk7BbW";appScript.crossOrigin="anonymous";document.body.appendChild(appScript);})();</script>
+    <script>(function(){const host=window.location.hostname;const isLocalHost=host==="localhost"||host==="127.0.0.1"||host==="[::1]";if(window.location.protocol==="http:"&&!isLocalHost){window.location.replace(window.location.href.replace(/^http:/,"https:"));return;}const appScript=document.createElement("script");appScript.type="module";appScript.src="./src/js/app.js";document.body.appendChild(appScript);})();</script>
   </body>
 </html>

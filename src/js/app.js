@@ -666,3 +666,10 @@ function registerServiceWorker() {
     showMessage("No fue posible registrar el Service Worker.");
   });
 }
+
+// ─── Auditorías: Web Vitals e Install Prompt ──────────────────────────────────
+import { initVitals }         from "./vitals.js";
+import { initInstallPrompt }  from "./install.js";
+
+initVitals();
+initInstallPrompt();

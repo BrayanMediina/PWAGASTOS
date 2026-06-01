@@ -1,5 +1,5 @@
-const APP_CACHE = "gastos-app-shell-v2";
-const RUNTIME_CACHE = "gastos-runtime-v2";
+const APP_CACHE = "gastos-app-shell-v3";
+const RUNTIME_CACHE = "gastos-runtime-v3";
 
 const APP_SHELL = [
 	"./",
@@ -7,6 +7,8 @@ const APP_SHELL = [
 	"./src/pages/offline.html",
 	"./src/css/styles.css",
 	"./src/js/app.js",
+	"./src/js/vitals.js",
+	"./src/js/install.js",
 	"./src/assets/icons/icon-192.svg",
 	"./src/assets/icons/icon-512.svg"
 ];
