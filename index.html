@@ -7,10 +7,16 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' 'sha256-uv/7mLWPqzMk6vblx0ZAbAV1eeUt5rt8nwhS06n+Cek=' 'strict-dynamic'; style-src 'self'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content"
     />
-    <meta name="theme-color" content="#6366f1" />
+    <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#818cf8" media="(prefers-color-scheme: dark)" />
     <meta name="description" content="PWA para registrar gastos diarios y presupuestos mensuales." />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Control Gastos" />
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./src/assets/icons/icon-192.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./src/assets/icons/icon-192.svg" />
     <link rel="stylesheet" href="./src/css/styles.css" />
     <title>Control de Gastos PWA</title>
   </head>
@@ -107,7 +113,9 @@
             <p id="sumBalance">$0</p>
           </article>
         </div>
-        <canvas id="budgetChart" width="900" height="320" aria-label="Gráfico de torta de gastos por categoría" role="img"></canvas>
+        <div class="chart-wrapper">
+          <canvas id="budgetChart" width="900" height="320" aria-label="Gráfico de torta de gastos por categoría" role="img"></canvas>
+        </div>
       </section>
 
       <section class="card card--history">

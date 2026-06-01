@@ -3,15 +3,99 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sin conexión</title>
+    <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#818cf8" media="(prefers-color-scheme: dark)" />
+    <title>Sin conexión · Control de Gastos</title>
     <link rel="stylesheet" href="../css/styles.css" />
+    <style>
+      .offline-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 60dvh;
+        text-align: center;
+        padding: 2rem 1.25rem;
+      }
+      .offline-icon {
+        font-size: 4rem;
+        margin-bottom: 1.25rem;
+        animation: pulse 2s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+      }
+      .offline-title {
+        font-size: clamp(1.4rem, 5vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+        color: var(--text);
+      }
+      .offline-desc {
+        color: var(--text-muted);
+        font-size: 1rem;
+        max-width: 340px;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+      }
+      .retry-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 2rem;
+        min-height: 2.75rem;
+        border-radius: 0.6rem;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: #fff;
+        font: inherit;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border: 0;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        touch-action: manipulation;
+        text-decoration: none;
+      }
+      .retry-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
+      }
+      .offline-hint {
+        margin-top: 1.5rem;
+        font-size: 0.83rem;
+        color: var(--text-muted);
+        opacity: 0.7;
+      }
+    </style>
   </head>
   <body>
+    <header class="app-header">
+      <div class="header-content">
+        <div class="header-text">
+          <h1>💰 Control de Gastos</h1>
+        </div>
+        <span class="badge">🔴 Sin conexión</span>
+      </div>
+    </header>
+
     <main class="container">
-      <section class="card">
-        <h1>Sin conexión</h1>
-        <p>No hay acceso a internet en este momento. Puedes seguir viendo contenido en caché.</p>
-      </section>
+      <div class="offline-wrap">
+        <div class="offline-icon">📡</div>
+        <h2 class="offline-title">Sin conexión a internet</h2>
+        <p class="offline-desc">
+          No hay red disponible en este momento. Tus datos guardados siguen accesibles
+          cuando vuelvas a la pantalla principal.
+        </p>
+        <a href="../../../index.html" class="retry-btn">🔄 Volver al inicio</a>
+        <p class="offline-hint">Los datos se guardan localmente en tu dispositivo.</p>
+      </div>
     </main>
+
+    <footer class="app-footer">
+      <p>Control de Gastos PWA &copy; 2026</p>
+    </footer>
   </body>
 </html>
